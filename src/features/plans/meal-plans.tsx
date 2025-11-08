@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
-import { mealPlansData, MealPlanDetails } from './meal-plans-data';
+import { MealPlanDetails } from '../../entities/plans';
+import { mealPlansData } from './meal-plans-data';
 
 interface MealPlansProps {
   onPlanSelect: (plan: MealPlanDetails) => void;

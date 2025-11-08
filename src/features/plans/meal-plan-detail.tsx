@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
-import { MealPlanDetails } from './meal-plans-data';
+import { MealPlanDetails } from '../../entities/plans';
 
 interface MealPlanDetailProps {
   plan: MealPlanDetails;

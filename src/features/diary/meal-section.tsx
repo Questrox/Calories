@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
-import { FoodItem, FoodItemComponent } from './food-item';
+import { FoodItem } from "../../entities/food";
+import { FoodItemComponent } from './food-item';
 import { Plus } from 'lucide-react-native';
 
 interface MealSectionProps {

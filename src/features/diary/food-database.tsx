@@ -1,12 +1,4 @@
-export interface FoodProduct {
-  id: string;
-  name: string;
-  caloriesPer100g: number;
-  proteinPer100g: number;
-  fatPer100g: number;
-  carbsPer100g: number;
-  category: string;
-}
+import { FoodProduct } from "../../entities/food";
 
 export const foodDatabase: FoodProduct[] = [
   // Зерновые и крупы

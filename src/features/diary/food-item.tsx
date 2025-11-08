@@ -1,16 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { Trash2 } from "lucide-react-native"; // установи lucide-react-native
-
-export interface FoodItem {
-  id: string;
-  name: string;
-  weight: number;
-  calories: number;
-  protein: number;
-  fat: number;
-  carbs: number;
-}
+import { Trash2 } from "lucide-react-native";
+import { FoodItem } from "../../entities/food";
 
 interface FoodItemProps {
   item: FoodItem;

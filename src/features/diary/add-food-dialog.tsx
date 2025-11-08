@@ -10,10 +10,10 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { FoodItem } from "./food-item";
-import { foodDatabase, searchFoods, calculateNutrients, FoodProduct } from "./food-database";
+import { FoodItem, FoodProduct } from "../../entities/food";
+import { foodDatabase, searchFoods, calculateNutrients } from "./food-database";
 import { launchImageLibrary } from "react-native-image-picker";
-import { API_TOKEN, MODEL_ID } from "../../config.local";
+import { API_TOKEN, MODEL_ID } from "../../../config.local";
 
 async function handleGetImage() {
   const result = await launchImageLibrary({

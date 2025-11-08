@@ -1,11 +1,7 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, FlatList } from "react-native";
 import { Plus, X } from "lucide-react-native";
-
-interface WaterEntry {
-  id: string;
-  amount: number;
-}
+import { WaterEntry } from "../../entities/food";
 
 interface WaterSectionProps {
   entries: WaterEntry[];
@@ -25,33 +21,33 @@ export function WaterSection({ entries, onAddWater, onDeleteWater }: WaterSectio
       <View style={styles.header}>
         <Text style={styles.title}>💧 Вода</Text>
         <TouchableOpacity style={styles.addButton} onPress={onAddWater}>
-          <Plus color="#fff" size={16} style={{ marginRight: 4 }} />
+          <Plus color="#fff" size={16} />
           <Text style={styles.addButtonText}>Добавить</Text>
         </TouchableOpacity>
       </View>
 
       {/* Total Water */}
       {totalWater > 0 && (
-        <View style={styles.totalBox}>
-          <Text style={styles.totalText}>{formatAmount(totalWater)}</Text>
+        <View style={styles.caloriesBox}>
+          <Text style={styles.caloriesText}>{formatAmount(totalWater)}</Text>
         </View>
       )}
 
       {/* Entries */}
       {entries.length > 0 && (
-        <ScrollView style={styles.entriesContainer}>
-          {entries.map((entry) => (
-            <View key={entry.id} style={styles.entry}>
-              <Text style={styles.entryText}>{formatAmount(entry.amount)}</Text>
-              <TouchableOpacity
-                style={styles.deleteButton}
-                onPress={() => onDeleteWater(entry.id)}
-              >
+        <FlatList
+          data={entries}
+          keyExtractor={(entry) => entry.id}
+          renderItem={({ item }) => (
+            <View style={styles.entry}>
+              <Text style={styles.entryText}>{formatAmount(item.amount)}</Text>
+              <TouchableOpacity style={styles.deleteButton} onPress={() => onDeleteWater(item.id)}>
                 <X color="#9CA3AF" size={16} />
               </TouchableOpacity>
             </View>
-          ))}
-        </ScrollView>
+          )}
+          contentContainerStyle={styles.itemsContainer}
+        />
       )}
     </View>
   );
@@ -59,66 +55,59 @@ export function WaterSection({ entries, onAddWater, onDeleteWater }: WaterSectio
 
 const styles = StyleSheet.create({
   card: {
-    width: "100%",
-    backgroundColor: "#1F2937",
+    backgroundColor: '#1F2937',
     borderRadius: 12,
     padding: 12,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: "#374151",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 3,
+    marginBottom: 16,
   },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingBottom: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
   },
   title: {
-    fontSize: 16,
-    color: "#fff",
-    fontWeight: "600",
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
   addButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#374151",
-    paddingVertical: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#374151',
     paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: 8,
   },
   addButtonText: {
-    color: "#fff",
+    color: 'white',
     fontWeight: '600',
-
+    marginLeft: 4,
   },
-  totalBox: {
+  caloriesBox: {
     marginTop: 4,
   },
-  totalText: {
-    color: "#9CA3AF",
-    fontSize: 13,
+  caloriesText: {
+    color: '#9CA3AF',
+    fontSize: 14,
+    marginBottom: 4,
   },
-  entriesContainer: {
+  itemsContainer: {
     marginTop: 8,
   },
   entry: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: "#374151",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#374151',
     borderRadius: 8,
     paddingVertical: 8,
     paddingHorizontal: 10,
     marginBottom: 6,
   },
   entryText: {
-    color: "#fff",
-    fontSize: 14,
+    color: '#E5E7EB',
+    fontSize: 13,
   },
   deleteButton: {
     padding: 4,

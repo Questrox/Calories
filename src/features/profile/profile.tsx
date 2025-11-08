@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { MealPlanDetails } from "./meal-plans-data";
+import { Card, CardContent, CardHeader, CardTitle } from "../../shared/ui/card";
+import { MealPlanDetails } from "../../entities/plans";
 import { ChevronRight } from "lucide-react-native";
 
 
