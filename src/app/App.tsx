@@ -1,11 +1,14 @@
-import React, { useState } from "react";
-import { SafeAreaView, View, TouchableOpacity, Text, StyleSheet } from "react-native";
+import React, { useState, useEffect } from "react";
+import { SafeAreaView, View, TouchableOpacity, Text, StyleSheet, ActivityIndicator } from "react-native";
+import { LoginPage } from "../pages/LoginPage";
 import { DiaryPage } from "../pages/DiaryPage";
 import { PlansPage } from "../pages/PlansPage";
 import { ProfilePage } from "../pages/ProfilePage";
 import { MealData, WaterEntry } from "../entities/food";
 import { MealPlanDetails } from "../entities/plans";
-
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { authFetch } from "../shared/api/authFetch";
+import { ApiClient } from "../shared/api/g";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<"diary" | "plans" | "profile">("diary");
@@ -17,6 +20,50 @@ export default function App() {
   const [waterEntries, setWaterEntries] = useState<WaterEntry[]>([]);
   const [activeDiet, setActiveDiet] = useState<MealPlanDetails | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<MealPlanDetails | null>(null);
+
+  const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const apiClient = new ApiClient("http://192.168.0.11:7163", { fetch: authFetch });
+  // проверка токена при старте приложения
+    useEffect(() => {
+        async function checkToken() {
+          try {
+            const token = await AsyncStorage.getItem("jwt");
+            if (!token) {
+              setIsAuthenticated(false);
+              return;
+            }
+
+            // проверяем валидность токена через ApiClient
+            await apiClient.validate();
+            setIsAuthenticated(true);
+          } catch {
+            setIsAuthenticated(false);
+            await AsyncStorage.removeItem("jwt");
+          } finally {
+            setLoading(false);
+          }
+        }
+
+        checkToken();
+      }, []);
+
+    if (loading) {
+      return (
+        <SafeAreaView style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+          <ActivityIndicator size="large" color="#fff" />
+        </SafeAreaView>
+      );
+    }
+
+    if (!isAuthenticated) {
+        return (
+          <LoginPage
+            apiClient={apiClient}
+            onLoginSuccess={() => setIsAuthenticated(true)}
+          />
+        );
+    }
 
   function handleViewDiet(diet: MealPlanDetails) {
     setSelectedPlan(diet);
