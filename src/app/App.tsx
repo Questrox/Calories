@@ -23,7 +23,7 @@ export default function App() {
 
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const apiClient = new ApiClient("http://192.168.0.11:7163", { fetch: authFetch });
+  const apiClient = new ApiClient("http://10.0.2.2:5139", { fetch: authFetch });
   // проверка токена при старте приложения
     useEffect(() => {
         async function checkToken() {
