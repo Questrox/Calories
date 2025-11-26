@@ -3,34 +3,56 @@ import { View, Modal, Text, Pressable, StyleSheet } from "react-native";
 import { MealPlans } from "../features/plans/meal-plans";
 import { MealPlanDetails } from "../entities/plans";
 import { MealPlanDetail } from "../features/plans/meal-plan-detail";
+import { MealPlanDTO, ApiClient } from "../shared/api/g";
+import { authFetch } from "../shared/api/authFetch";
+import { BASE_URL } from "../../config.local.js";
 
 interface PlansPageProps {
-  activeDiet: MealPlanDetails | null;
-  setActiveDiet: React.Dispatch<React.SetStateAction<MealPlanDetails | null>>;
-  selectedPlan: MealPlanDetails | null;
-  setSelectedPlan: React.Dispatch<React.SetStateAction<MealPlanDetails | null>>;
+  activeDiet: MealPlanDTO | null;
+  setActiveDiet: React.Dispatch<React.SetStateAction<MealPlanDTO | null>>;
+  selectedPlan: MealPlanDTO | null;
+  setSelectedPlan: React.Dispatch<React.SetStateAction<MealPlanDTO | null>>;
+  plans: MealPlanDTO[];
 }
 
-export function PlansPage({ activeDiet, setActiveDiet, selectedPlan, setSelectedPlan }: PlansPageProps) {
-  const [pendingDiet, setPendingDiet] = useState<MealPlanDetails | null>(null);
+export function PlansPage({ activeDiet, setActiveDiet, selectedPlan, setSelectedPlan, plans }: PlansPageProps) {
+  const [pendingDiet, setPendingDiet] = useState<MealPlanDTO | null>(null);
   const [confirmVisible, setConfirmVisible] = useState(false);
 
-  const handleActivateDiet = (diet: MealPlanDetails) => {
+  const apiClient = new ApiClient(BASE_URL, { fetch: authFetch });
+
+  const handleActivateDiet = async (diet: MealPlanDTO) => {
     if (activeDiet && activeDiet.id !== diet.id) {
       setPendingDiet(diet);
       setConfirmVisible(true);
-    } else {
+      return;
+    }
+
+    try {
+      await apiClient.selectMealPlan(diet.id!);
       setActiveDiet(diet);
+    } catch (error) {
+      console.error(error);
     }
   };
 
-  const handleConfirmDietChange = () => {
-    if (pendingDiet) {
-      setActiveDiet(pendingDiet);
-      setPendingDiet(null);
+  const handleConfirmDietChange = async () => {
+    if (!pendingDiet) {
+      setConfirmVisible(false);
+      return;
     }
-    setConfirmVisible(false);
+
+    try {
+      await apiClient.selectMealPlan(pendingDiet.id!);
+      setActiveDiet(pendingDiet);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setPendingDiet(null);
+      setConfirmVisible(false);
+    }
   };
+
 
   const handleCancelDietChange = () => {
     setPendingDiet(null);
@@ -47,7 +69,7 @@ export function PlansPage({ activeDiet, setActiveDiet, selectedPlan, setSelected
           isActive={activeDiet?.id === selectedPlan.id}
         />
       ) : (
-        <MealPlans onPlanSelect={setSelectedPlan} />
+        <MealPlans onPlanSelect={setSelectedPlan} plans={plans} />
       )}
 
       <Modal transparent visible={confirmVisible} animationType="fade">

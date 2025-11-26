@@ -8,7 +8,8 @@ import { MealData, WaterEntry } from "../entities/food";
 import { MealPlanDetails } from "../entities/plans";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { authFetch } from "../shared/api/authFetch";
-import { ApiClient } from "../shared/api/g";
+import { ApiClient, FoodDTO, MealPlanDTO } from "../shared/api/g";
+import { BASE_URL } from "../../config.local.js";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<"diary" | "plans" | "profile">("diary");
@@ -18,15 +19,18 @@ export default function App() {
     dinner: [],
   });
   const [waterEntries, setWaterEntries] = useState<WaterEntry[]>([]);
-  const [activeDiet, setActiveDiet] = useState<MealPlanDetails | null>(null);
-  const [selectedPlan, setSelectedPlan] = useState<MealPlanDetails | null>(null);
+  const [activeDiet, setActiveDiet] = useState<MealPlanDTO | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<MealPlanDTO | null>(null);
+  const [foods, setFoods] = useState<FoodDTO[]>([]);
+  const [plans, setPlans] = useState<MealPlanDTO[]>([]);
 
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const apiClient = new ApiClient("http://10.0.2.2:5139", { fetch: authFetch });
+  const apiClient = new ApiClient(BASE_URL, { fetch: authFetch });
+
   // проверка токена при старте приложения
     useEffect(() => {
-        async function checkToken() {
+        async function initialize() {
           try {
             const token = await AsyncStorage.getItem("jwt");
             if (!token) {
@@ -37,6 +41,16 @@ export default function App() {
             // проверяем валидность токена через ApiClient
             await apiClient.validate();
             setIsAuthenticated(true);
+
+            // загружаем данные
+            const foodData = await apiClient.getFoods();
+            setFoods(foodData);
+
+            const plansData = await apiClient.getMealPlans();
+            setPlans(plansData);
+
+            const dietData = await apiClient.getCurrentMealPlan();
+            setActiveDiet(dietData);
           } catch {
             setIsAuthenticated(false);
             await AsyncStorage.removeItem("jwt");
@@ -45,7 +59,7 @@ export default function App() {
           }
         }
 
-        checkToken();
+        initialize();
       }, []);
 
     if (loading) {
@@ -65,7 +79,7 @@ export default function App() {
         );
     }
 
-  function handleViewDiet(diet: MealPlanDetails) {
+  function handleViewDiet(diet: MealPlanDTO) {
     setSelectedPlan(diet);
     setActiveTab("plans");
   }
@@ -79,6 +93,8 @@ export default function App() {
             setMeals={setMeals}
             waterEntries={waterEntries}
             setWaterEntries={setWaterEntries}
+            foods = {foods}
+            setFoods = {setFoods}
           />
         )}
 
@@ -88,13 +104,13 @@ export default function App() {
             setActiveDiet={setActiveDiet}
             selectedPlan={selectedPlan}
             setSelectedPlan={setSelectedPlan}
+            plans={plans}
           />
         )}
 
         {activeTab === "profile" && (
           <ProfilePage
             activeDiet={activeDiet}
-            setActiveDiet={setActiveDiet}
             onViewDiet={handleViewDiet}
           />
         )}

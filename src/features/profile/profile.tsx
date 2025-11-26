@@ -3,17 +3,18 @@ import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from "react-nati
 import { Card, CardContent, CardHeader, CardTitle } from "../../shared/ui/card";
 import { MealPlanDetails } from "../../entities/plans";
 import { ChevronRight } from "lucide-react-native";
+import { MealPlanDTO, MealPlanDayDTO } from "../../shared/api/g";
 
 
 interface ProfileProps {
-  activeDiet: MealPlanDetails | null;
-  onViewDiet: (diet: MealPlanDetails) => void;
+  activeDiet: MealPlanDTO | null;
+  onViewDiet: (diet: MealPlanDTO) => void;
 }
 
 export function Profile({ activeDiet, onViewDiet }: ProfileProps) {
   const today = new Date().getDay();
   const dayOfWeek = today === 0 ? 7 : today;
-  const todayMenu = activeDiet?.weekMenu.find((menu) => menu.day === dayOfWeek);
+  const todayMenu = activeDiet?.mealPlanDay!.find((menu) => menu.day === dayOfWeek);
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -78,19 +79,19 @@ export function Profile({ activeDiet, onViewDiet }: ProfileProps) {
             <View style={styles.macrosGrid}>
               <View style={styles.macroBox}>
                 <Text style={styles.macroLabel}>Калории</Text>
-                <Text style={styles.macroValue}>{activeDiet.macros.calories}</Text>
+                <Text style={styles.macroValue}>{activeDiet.calories}</Text>
               </View>
               <View style={styles.macroBox}>
                 <Text style={styles.macroLabel}>Белки</Text>
-                <Text style={styles.macroValue}>{activeDiet.macros.protein}</Text>
+                <Text style={styles.macroValue}>{activeDiet.protein}</Text>
               </View>
               <View style={styles.macroBox}>
                 <Text style={styles.macroLabel}>Жиры</Text>
-                <Text style={styles.macroValue}>{activeDiet.macros.fat}</Text>
+                <Text style={styles.macroValue}>{activeDiet.fat}</Text>
               </View>
               <View style={styles.macroBox}>
                 <Text style={styles.macroLabel}>Углеводы</Text>
-                <Text style={styles.macroValue}>{activeDiet.macros.carbs}</Text>
+                <Text style={styles.macroValue}>{activeDiet.carbs}</Text>
               </View>
             </View>
           </View>

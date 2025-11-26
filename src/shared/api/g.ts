@@ -554,11 +554,8 @@ export class ApiClient {
     /**
      * @return OK
      */
-    getMealPlan(id: number): Promise<MealPlanDTO> {
-        let url_ = this.baseUrl + "/api/Plans/GetMealPlan/{id}";
-        if (id === undefined || id === null)
-            throw new globalThis.Error("The parameter 'id' must be defined.");
-        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+    getCurrentMealPlan(): Promise<MealPlanDTO> {
+        let url_ = this.baseUrl + "/api/Plans/GetCurrentMealPlan";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -569,11 +566,11 @@ export class ApiClient {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetMealPlan(_response);
+            return this.processGetCurrentMealPlan(_response);
         });
     }
 
-    protected processGetMealPlan(response: Response): Promise<MealPlanDTO> {
+    protected processGetCurrentMealPlan(response: Response): Promise<MealPlanDTO> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -592,18 +589,13 @@ export class ApiClient {
     }
 
     /**
-     * @param mealPlanId (optional) 
      * @return OK
      */
-    selectMealPlan(mealPlanId: number | undefined, id: string): Promise<UserDTO> {
-        let url_ = this.baseUrl + "/api/Plans/SelectMealPlan/{id}?";
-        if (id === undefined || id === null)
-            throw new globalThis.Error("The parameter 'id' must be defined.");
-        url_ = url_.replace("{id}", encodeURIComponent("" + id));
-        if (mealPlanId === null)
-            throw new globalThis.Error("The parameter 'mealPlanId' cannot be null.");
-        else if (mealPlanId !== undefined)
-            url_ += "mealPlanId=" + encodeURIComponent("" + mealPlanId) + "&";
+    selectMealPlan(mealPlanId: number): Promise<UserDTO> {
+        let url_ = this.baseUrl + "/api/Plans/SelectMealPlan/{mealPlanId}";
+        if (mealPlanId === undefined || mealPlanId === null)
+            throw new globalThis.Error("The parameter 'mealPlanId' must be defined.");
+        url_ = url_.replace("{mealPlanId}", encodeURIComponent("" + mealPlanId));
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -1001,78 +993,6 @@ export interface ILoginResult {
     userRole?: string | undefined;
 }
 
-export class MealPlan implements IMealPlan {
-    id?: number;
-    title?: string | undefined;
-    description?: string | undefined;
-    fullDescription?: string | undefined;
-    benefitsJson?: string | undefined;
-    warningsJson?: string | undefined;
-    calories?: string | undefined;
-    protein?: string | undefined;
-    fat?: string | undefined;
-    carbs?: string | undefined;
-
-    constructor(data?: IMealPlan) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.id = _data["id"];
-            this.title = _data["title"];
-            this.description = _data["description"];
-            this.fullDescription = _data["fullDescription"];
-            this.benefitsJson = _data["benefitsJson"];
-            this.warningsJson = _data["warningsJson"];
-            this.calories = _data["calories"];
-            this.protein = _data["protein"];
-            this.fat = _data["fat"];
-            this.carbs = _data["carbs"];
-        }
-    }
-
-    static fromJS(data: any): MealPlan {
-        data = typeof data === 'object' ? data : {};
-        let result = new MealPlan();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["id"] = this.id;
-        data["title"] = this.title;
-        data["description"] = this.description;
-        data["fullDescription"] = this.fullDescription;
-        data["benefitsJson"] = this.benefitsJson;
-        data["warningsJson"] = this.warningsJson;
-        data["calories"] = this.calories;
-        data["protein"] = this.protein;
-        data["fat"] = this.fat;
-        data["carbs"] = this.carbs;
-        return data;
-    }
-}
-
-export interface IMealPlan {
-    id?: number;
-    title?: string | undefined;
-    description?: string | undefined;
-    fullDescription?: string | undefined;
-    benefitsJson?: string | undefined;
-    warningsJson?: string | undefined;
-    calories?: string | undefined;
-    protein?: string | undefined;
-    fat?: string | undefined;
-    carbs?: string | undefined;
-}
-
 export class MealPlanDTO implements IMealPlanDTO {
     id?: number;
     title?: string | undefined;
@@ -1322,7 +1242,7 @@ export class UserDTO implements IUserDTO {
     fullName?: string | undefined;
     mealPlanStart?: Date;
     mealPlanId?: number | undefined;
-    mealPlan?: MealPlan;
+    mealPlan?: MealPlanDTO;
     food?: FoodDTO[] | undefined;
     foodEntry?: FoodEntryDTO[] | undefined;
     waterEntry?: WaterEntryDTO[] | undefined;
@@ -1342,7 +1262,7 @@ export class UserDTO implements IUserDTO {
             this.fullName = _data["fullName"];
             this.mealPlanStart = _data["mealPlanStart"] ? new Date(_data["mealPlanStart"].toString()) : undefined as any;
             this.mealPlanId = _data["mealPlanId"];
-            this.mealPlan = _data["mealPlan"] ? MealPlan.fromJS(_data["mealPlan"]) : undefined as any;
+            this.mealPlan = _data["mealPlan"] ? MealPlanDTO.fromJS(_data["mealPlan"]) : undefined as any;
             if (Array.isArray(_data["food"])) {
                 this.food = [] as any;
                 for (let item of _data["food"])
@@ -1399,7 +1319,7 @@ export interface IUserDTO {
     fullName?: string | undefined;
     mealPlanStart?: Date;
     mealPlanId?: number | undefined;
-    mealPlan?: MealPlan;
+    mealPlan?: MealPlanDTO;
     food?: FoodDTO[] | undefined;
     foodEntry?: FoodEntryDTO[] | undefined;
     waterEntry?: WaterEntryDTO[] | undefined;

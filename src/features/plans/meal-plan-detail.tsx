@@ -1,11 +1,12 @@
 import React from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { MealPlanDetails } from '../../entities/plans';
+import { MealPlanDTO, MealPlanDayDTO } from '../../shared/api/g';
 
 interface MealPlanDetailProps {
-  plan: MealPlanDetails;
+  plan: MealPlanDTO;
   onBack: () => void;
-  onActivate: (plan: MealPlanDetails) => void;
+  onActivate: (plan: MealPlanDTO) => void;
   isActive: boolean;
 }
 
@@ -40,10 +41,10 @@ export function MealPlanDetail({ plan, onBack, onActivate, isActive }: MealPlanD
         </View>
 
         {/* Benefits */}
-        {plan.benefits.length > 0 && (
+        {plan.benefits!.length > 0 && (
           <View style={styles.card}>
             <Text style={styles.cardTitle}>✅ Преимущества</Text>
-            {plan.benefits.map((b, i) => (
+            {plan.benefits!.map((b, i) => (
               <View key={i} style={styles.listItem}>
                 <Text style={styles.bullet}>•</Text>
                 <Text style={styles.listText}>{b}</Text>
@@ -71,19 +72,19 @@ export function MealPlanDetail({ plan, onBack, onActivate, isActive }: MealPlanD
           <View style={styles.macroRow}>
             <View style={styles.macroItem}>
               <Text style={styles.macroLabel}>Калории</Text>
-              <Text style={styles.macroValue}>{plan.macros.calories}</Text>
+              <Text style={styles.macroValue}>{plan.calories}</Text>
             </View>
             <View style={styles.macroItem}>
               <Text style={styles.macroLabel}>Белки</Text>
-              <Text style={styles.macroValue}>{plan.macros.protein}</Text>
+              <Text style={styles.macroValue}>{plan.protein}</Text>
             </View>
             <View style={styles.macroItem}>
               <Text style={styles.macroLabel}>Жиры</Text>
-              <Text style={styles.macroValue}>{plan.macros.fat}</Text>
+              <Text style={styles.macroValue}>{plan.fat}</Text>
             </View>
             <View style={styles.macroItem}>
               <Text style={styles.macroLabel}>Углеводы</Text>
-              <Text style={styles.macroValue}>{plan.macros.carbs}</Text>
+              <Text style={styles.macroValue}>{plan.carbs}</Text>
             </View>
           </View>
         </View>
@@ -91,7 +92,7 @@ export function MealPlanDetail({ plan, onBack, onActivate, isActive }: MealPlanD
         {/* Weekly Menu */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>📅 Меню на неделю</Text>
-          {plan.weekMenu.map(day => (
+          {plan.mealPlanDay!.map(day => (
             <View key={day.day} style={styles.dayCard}>
               <Text style={styles.dayTitle}>День {day.day}</Text>
 

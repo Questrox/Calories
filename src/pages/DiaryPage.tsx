@@ -6,6 +6,9 @@ import { AddFoodDialog } from "../features/diary/add-food-dialog";
 import { AddWaterDialog } from "../features/diary/add-water-dialog";
 import DatePickerSimple from "../shared/ui/date-picker";
 import { FoodItem, MealData, WaterEntry } from "../entities/food";
+import { ApiClient, FoodDTO, CreateFoodEntryDTO } from "../shared/api/g";
+import { authFetch } from "../shared/api/authFetch";
+import { BASE_URL } from "../../config.local.js";
 
 type MealType = "breakfast" | "lunch" | "dinner";
 
@@ -14,9 +17,11 @@ interface DiaryPageProps {
   setMeals: React.Dispatch<React.SetStateAction<MealData>>;
   waterEntries: WaterEntry[];
   setWaterEntries: React.Dispatch<React.SetStateAction<WaterEntry[]>>;
+  foods: FoodDTO[];
+  setFoods : React.Dispatch<React.SetStateAction<FoodDTO[]>>;
 }
 
-export function DiaryPage({ meals, setMeals, waterEntries, setWaterEntries }: DiaryPageProps) {
+export function DiaryPage({ meals, setMeals, waterEntries, setWaterEntries, foods, setFoods }: DiaryPageProps) {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [dialogOpen, setDialogOpen] = useState(false);
   const [waterDialogOpen, setWaterDialogOpen] = useState(false);
@@ -29,6 +34,8 @@ export function DiaryPage({ meals, setMeals, waterEntries, setWaterEntries }: Di
   const totalCarbs = allFoods.reduce((sum, item) => sum + item.carbs, 0);
   const totalWater = waterEntries.reduce((sum, entry) => sum + entry.amount, 0);
 
+  const apiClient = new ApiClient(BASE_URL, { fetch: authFetch });
+
   const getMealTitle = (meal: MealType) => {
     switch (meal) {
       case "breakfast": return "Завтрак";
@@ -37,26 +44,26 @@ export function DiaryPage({ meals, setMeals, waterEntries, setWaterEntries }: Di
     }
   };
 
-  const handleAddFood = (mealType: MealType) => {
+  const handleAddFoodEntry = (mealType: MealType) => {
     setCurrentMeal(mealType);
     setDialogOpen(true);
   };
 
-  const handleFoodAdded = (foodData: Omit<FoodItem, "id">) => {
+  const handleFoodEntryAdded = (foodData: Omit<FoodItem, "id">) => {
     if (!currentMeal) return;
     const newFood: FoodItem = { ...foodData, id: Date.now().toString() };
     setMeals(prev => ({ ...prev, [currentMeal]: [...prev[currentMeal], newFood] }));
   };
 
-  const handleDeleteFood = (mealType: MealType, foodId: string) => {
+  const handleDeleteFoodEntry = (mealType: MealType, foodId: string) => {
     setMeals(prev => ({ ...prev, [mealType]: prev[mealType].filter(item => item.id !== foodId) }));
   };
 
-  const handleAddWater = (amount: number) => {
+  const handleAddWaterEntry = (amount: number) => {
     setWaterEntries(prev => [...prev, { id: Date.now().toString(), amount }]);
   };
 
-  const handleDeleteWater = (id: string) => {
+  const handleDeleteWaterEntry = (id: string) => {
     setWaterEntries(prev => prev.filter(entry => entry.id !== id));
   };
 
@@ -98,14 +105,20 @@ export function DiaryPage({ meals, setMeals, waterEntries, setWaterEntries }: Di
         )}
       </View>
 
-      <MealSection title="🌅 Завтрак" items={meals.breakfast} onAdd={() => handleAddFood("breakfast")} onDelete={id => handleDeleteFood("breakfast", id)} showCalories />
-      <MealSection title="☀️ Обед" items={meals.lunch} onAdd={() => handleAddFood("lunch")} onDelete={id => handleDeleteFood("lunch", id)} showCalories />
-      <MealSection title="🌙 Ужин" items={meals.dinner} onAdd={() => handleAddFood("dinner")} onDelete={id => handleDeleteFood("dinner", id)} showCalories />
+      <MealSection title="🌅 Завтрак" items={meals.breakfast} onAdd={() => handleAddFoodEntry("breakfast")} onDelete={id => handleDeleteFoodEntry("breakfast", id)} showCalories />
+      <MealSection title="☀️ Обед" items={meals.lunch} onAdd={() => handleAddFoodEntry("lunch")} onDelete={id => handleDeleteFoodEntry("lunch", id)} showCalories />
+      <MealSection title="🌙 Ужин" items={meals.dinner} onAdd={() => handleAddFoodEntry("dinner")} onDelete={id => handleDeleteFoodEntry("dinner", id)} showCalories />
 
-      <WaterSection entries={waterEntries} onAddWater={() => setWaterDialogOpen(true)} onDeleteWater={handleDeleteWater} />
+      <WaterSection entries={waterEntries} onAddWater={() => setWaterDialogOpen(true)} onDeleteWater={handleDeleteWaterEntry} />
 
-      <AddFoodDialog open={dialogOpen} onClose={() => setDialogOpen(false)} onAddFood={handleFoodAdded} mealTitle={currentMeal ? getMealTitle(currentMeal) : "Приём пищи"} />
-      <AddWaterDialog open={waterDialogOpen} onClose={() => setWaterDialogOpen(false)} onAdd={handleAddWater} />
+      <AddFoodDialog
+      open={dialogOpen}
+      onClose={() => setDialogOpen(false)}
+      onAddFoodEntry={handleFoodEntryAdded}
+      mealTitle={currentMeal ? getMealTitle(currentMeal) : "Приём пищи"}
+      foods={foods}
+      setFoods={setFoods} />
+      <AddWaterDialog open={waterDialogOpen} onClose={() => setWaterDialogOpen(false)} onAdd={handleAddWaterEntry} />
     </ScrollView>
   );
 };

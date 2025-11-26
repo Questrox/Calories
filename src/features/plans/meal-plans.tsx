@@ -1,13 +1,14 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { MealPlanDetails } from '../../entities/plans';
-import { mealPlansData } from './meal-plans-data';
+import { MealPlanDTO } from '../../shared/api/g';
 
 interface MealPlansProps {
-  onPlanSelect: (plan: MealPlanDetails) => void;
+  onPlanSelect: (plan: MealPlanDTO) => void;
+  plans: MealPlanDTO[];
 }
 
-export function MealPlans({ onPlanSelect }: MealPlansProps) {
+export function MealPlans({ onPlanSelect, plans }: MealPlansProps) {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.header}>
@@ -15,17 +16,17 @@ export function MealPlans({ onPlanSelect }: MealPlansProps) {
         <Text style={styles.subtitle}>Выберите план, который соответствует вашим целям</Text>
       </View>
 
-      {mealPlansData.map((plan) => (
+      {plans.map((plan) => (
         <TouchableOpacity key={plan.id} style={styles.card} onPress={() => onPlanSelect(plan)}>
           <View style={styles.cardContent}>
             <View style={{ flex: 1 }}>
               <Text style={styles.planTitle}>{plan.title}</Text>
               <Text style={styles.planDescription}>{plan.description}</Text>
               <View style={styles.macrosRow}>
-                <Text style={styles.macroText}>{plan.macros.calories}</Text>
-                <Text style={styles.macroText}>Б: {plan.macros.protein}</Text>
-                <Text style={styles.macroText}>Ж: {plan.macros.fat}</Text>
-                <Text style={styles.macroText}>У: {plan.macros.carbs}</Text>
+                <Text style={styles.macroText}>{plan.calories}</Text>
+                <Text style={styles.macroText}>Б: {plan.protein}</Text>
+                <Text style={styles.macroText}>Ж: {plan.fat}</Text>
+                <Text style={styles.macroText}>У: {plan.carbs}</Text>
               </View>
             </View>
             <Text style={styles.arrow}>›</Text>

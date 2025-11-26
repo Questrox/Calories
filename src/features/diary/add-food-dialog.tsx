@@ -10,10 +10,10 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { FoodItem, FoodProduct } from "../../entities/food";
-import { foodDatabase, searchFoods, calculateNutrients } from "./food-database";
+import { FoodItem } from "../../entities/food";
 import { launchImageLibrary } from "react-native-image-picker";
 import { API_TOKEN, MODEL_ID } from "../../../config.local";
+import { ApiClient, FoodDTO, CreateFoodDTO } from "../../shared/api/g";
 
 async function handleGetImage() {
   const result = await launchImageLibrary({
@@ -60,21 +60,29 @@ async function recognizeFood(imageBase64: string) {
   }
 }
 
-
-
-
+function calculateNutrients(product: FoodDTO, weightInGrams: number) {
+  const factor = weightInGrams / 100;
+  return {
+    calories: Math.round(product.calories! * factor),
+    protein: Math.round(product.protein! * factor * 10) / 10,
+    fat: Math.round(product.fat! * factor * 10) / 10,
+    carbs: Math.round(product.carbs! * factor * 10) / 10,
+  };
+}
 
 interface AddFoodDialogProps {
   open: boolean;
   onClose: () => void;
-  onAddFood: (food: Omit<FoodItem, "id">) => void;
+  onAddFoodEntry: (food: Omit<FoodItem, "id">) => void;
   mealTitle: string;
+  foods: FoodDTO[];
+  setFoods : React.Dispatch<React.SetStateAction<FoodDTO[]>>;
 }
 
-export function AddFoodDialog({ open, onClose, onAddFood, mealTitle }: AddFoodDialogProps) {
+export function AddFoodDialog({ open, onClose, onAddFoodEntry, mealTitle, foods, setFoods }: AddFoodDialogProps) {
   const [view, setView] = useState<"search" | "add-weight" | "add-new">("search");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedProduct, setSelectedProduct] = useState<FoodProduct | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<FoodDTO | null>(null);
   const [weight, setWeight] = useState("");
 
   const [newProductName, setNewProductName] = useState("");
@@ -84,9 +92,16 @@ export function AddFoodDialog({ open, onClose, onAddFood, mealTitle }: AddFoodDi
   const [newProductFat, setNewProductFat] = useState("");
   const [newProductCarbs, setNewProductCarbs] = useState("");
 
+  function searchFoods(query: string): FoodDTO[] {
+    if (!query.trim()) return foods;
+
+    const lowercaseQuery = query.toLowerCase().trim();
+    return foods.filter(food => food.name!.toLowerCase().includes(lowercaseQuery));
+  }
+
   const filteredFoods = useMemo(() => searchFoods(searchQuery), [searchQuery]);
 
-  const handleProductSelect = (product: FoodProduct) => {
+  const handleProductSelect = (product: FoodDTO) => {
     setSelectedProduct(product);
     setView("add-weight");
   };
@@ -97,8 +112,8 @@ export function AddFoodDialog({ open, onClose, onAddFood, mealTitle }: AddFoodDi
     const weightNum = parseInt(weight);
     const nutrients = calculateNutrients(selectedProduct, weightNum);
 
-    onAddFood({
-      name: selectedProduct.name,
+    onAddFoodEntry({
+      name: selectedProduct.name!,
       weight: weightNum,
       calories: nutrients.calories,
       protein: nutrients.protein,
@@ -113,7 +128,7 @@ export function AddFoodDialog({ open, onClose, onAddFood, mealTitle }: AddFoodDi
     if (!newProductName.trim() || !newProductWeight || !newProductCalories ||
         !newProductProtein || !newProductFat || !newProductCarbs) return;
 
-    onAddFood({
+    onAddFoodEntry({
       name: newProductName.trim(),
       weight: parseInt(newProductWeight),
       calories: parseInt(newProductCalories),
@@ -206,7 +221,9 @@ export function AddFoodDialog({ open, onClose, onAddFood, mealTitle }: AddFoodDi
                   </TouchableOpacity>
 
                   {/* Product list */}
-                  {filteredFoods.map((product) => (
+                  {filteredFoods.length === 0 ? (
+                     <Text style={styles.productName}>Продукты не найдены</Text>
+                   ) : (filteredFoods.map((product) => (
                     <TouchableOpacity
                       key={product.id}
                       style={styles.productCard}
@@ -214,16 +231,15 @@ export function AddFoodDialog({ open, onClose, onAddFood, mealTitle }: AddFoodDi
                     >
                       <View>
                         <Text style={styles.productName}>{product.name}</Text>
-                        <Text style={styles.productCategory}>{product.category}</Text>
                       </View>
                       <View>
-                        <Text style={styles.productInfo}>{product.caloriesPer100g} ккал/100г</Text>
+                        <Text style={styles.productInfo}>{product.calories} ккал/100г</Text>
                         <Text style={styles.productInfo}>
-                          Б:{product.proteinPer100g} Ж:{product.fatPer100g} У:{product.carbsPer100g}
+                          Б:{product.protein} Ж:{product.fat} У:{product.carbs}
                         </Text>
                       </View>
                     </TouchableOpacity>
-                  ))}
+                  )))}
                 </>
               )}
 
