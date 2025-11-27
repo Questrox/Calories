@@ -3,20 +3,21 @@ import { View, Text, TouchableOpacity, StyleSheet, FlatList } from 'react-native
 import { FoodItem } from "../../entities/food";
 import { FoodItemComponent } from './food-item';
 import { Plus } from 'lucide-react-native';
+import { FoodEntryDTO } from "../../shared/api/g";
 
 interface MealSectionProps {
   title: string;
-  items: FoodItem[];
+  items: FoodEntryDTO[];
   onAdd: () => void;
-  onDelete: (id: string) => void;
+  onDelete: (id: number) => void;
   showCalories?: boolean;
 }
 
 export default function MealSection({ title, items, onAdd, onDelete, showCalories = true }: MealSectionProps) {
-  const totalCalories = items.reduce((sum, item) => sum + item.calories, 0);
-  const totalProtein = items.reduce((sum, item) => sum + item.protein, 0);
-  const totalFat = items.reduce((sum, item) => sum + item.fat, 0);
-  const totalCarbs = items.reduce((sum, item) => sum + item.carbs, 0);
+  const totalCalories = items.reduce((sum, item) => sum + item.food!.calories!, 0);
+  const totalProtein = items.reduce((sum, item) => sum + item.food!.protein!, 0);
+  const totalFat = items.reduce((sum, item) => sum + item.food!.fat!, 0);
+  const totalCarbs = items.reduce((sum, item) => sum + item.food!.carbs!, 0);
 
   return (
     <View style={styles.card}>
@@ -45,7 +46,7 @@ export default function MealSection({ title, items, onAdd, onDelete, showCalorie
       {items.length > 0 && (
         <FlatList
           data={items}
-          keyExtractor={item => item.id}
+          keyExtractor={item => item.id!.toString()}
           renderItem={({ item }) => <FoodItemComponent item={item} onDelete={onDelete} />}
           contentContainerStyle={styles.itemsContainer}
         />

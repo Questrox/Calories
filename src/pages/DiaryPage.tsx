@@ -6,7 +6,7 @@ import { AddFoodDialog } from "../features/diary/add-food-dialog";
 import { AddWaterDialog } from "../features/diary/add-water-dialog";
 import DatePickerSimple from "../shared/ui/date-picker";
 import { FoodItem, MealData, WaterEntry } from "../entities/food";
-import { ApiClient, FoodDTO, WaterEntryDTO, CreateWaterEntryDTO, CreateFoodEntryDTO } from "../shared/api/g";
+import { ApiClient, FoodDTO, WaterEntryDTO, CreateWaterEntryDTO, FoodEntryDTO, CreateFoodEntryDTO } from "../shared/api/g";
 import { authFetch } from "../shared/api/authFetch";
 import { BASE_URL } from "../../config.local.js";
 
@@ -28,10 +28,10 @@ export function DiaryPage({ meals, setMeals, waterEntries, setWaterEntries, food
   const [currentMeal, setCurrentMeal] = useState<MealType | null>(null);
 
   const allFoods = Object.values(meals).flat();
-  const totalCalories = allFoods.reduce((sum, item) => sum + item.calories, 0);
-  const totalProtein = allFoods.reduce((sum, item) => sum + item.protein, 0);
-  const totalFat = allFoods.reduce((sum, item) => sum + item.fat, 0);
-  const totalCarbs = allFoods.reduce((sum, item) => sum + item.carbs, 0);
+  const totalCalories = allFoods.reduce((sum, item) => sum + item.food.calories, 0);
+  const totalProtein = allFoods.reduce((sum, item) => sum + item.food.protein, 0);
+  const totalFat = allFoods.reduce((sum, item) => sum + item.food.fat, 0);
+  const totalCarbs = allFoods.reduce((sum, item) => sum + item.food.carbs, 0);
   const totalWater = waterEntries.reduce((sum, entry) => sum + entry.amount!, 0);
 
   const apiClient = new ApiClient(BASE_URL, { fetch: authFetch });
@@ -44,19 +44,37 @@ export function DiaryPage({ meals, setMeals, waterEntries, setWaterEntries, food
     }
   };
 
+  const getMealTypeId = (meal: MealType) => {
+      switch (meal) {
+        case "breakfast": return 1;
+        case "lunch": return 2;
+        case "dinner": return 3;
+      }
+    };
+
   const handleAddFoodEntry = (mealType: MealType) => {
     setCurrentMeal(mealType);
     setDialogOpen(true);
   };
 
-  const handleFoodEntryAdded = (foodData: Omit<FoodItem, "id">) => {
+  const handleFoodEntryAdded = async (foodData: Omit<CreateFoodEntryDTO, "date" | "mealTypeId">) => {
     if (!currentMeal) return;
-    const newFood: FoodItem = { ...foodData, id: Date.now().toString() };
-    setMeals(prev => ({ ...prev, [currentMeal]: [...prev[currentMeal], newFood] }));
+    try {
+        const createFood = new CreateFoodEntryDTO ({
+            ...foodData,
+            date: selectedDate,
+            mealTypeId: getMealTypeId(currentMeal),
+          });
+        const newFood = await apiClient.addFoodEntry(createFood);
+        setMeals(prev => ({ ...prev, [currentMeal]: [...prev[currentMeal], newFood] }));
+    } catch (error) { console.error(error); }
   };
 
-  const handleDeleteFoodEntry = (mealType: MealType, foodId: string) => {
-    setMeals(prev => ({ ...prev, [mealType]: prev[mealType].filter(item => item.id !== foodId) }));
+  const handleDeleteFoodEntry = async (mealType: MealType, foodEntryId: number) => {
+    try {
+        await apiClient.deleteFoodEntry(foodEntryId);
+        setMeals(prev => ({ ...prev, [mealType]: prev[mealType].filter(item => item.id !== foodEntryId) }));
+    } catch (error) { console.error(error); }
   };
 
   const handleAddWaterEntry = async (amount: number) => {
@@ -67,14 +85,14 @@ export function DiaryPage({ meals, setMeals, waterEntries, setWaterEntries, food
             })
         const newEntry = await apiClient.addWaterEntry(createEntry);
         setWaterEntries(prev => [...prev, newEntry]);
-    } catch (error) { console.error(error, error.status); }
+    } catch (error) { console.error(error); }
   };
 
   const handleDeleteWaterEntry = async (id: number) => {
     try {
         await apiClient.deleteWaterEntry(id);
         setWaterEntries(prev => prev.filter(entry => entry.id !== id));
-    } catch (error) { console.log(error); }
+    } catch (error) { console.error(error); }
   };
 
   return (
@@ -91,15 +109,15 @@ export function DiaryPage({ meals, setMeals, waterEntries, setWaterEntries, food
         {totalCalories > 0 && (
           <View style={styles.macroRow}>
             <View style={styles.macroItem}>
-              <Text style={[styles.macroValue, { color: "#60A5FA" }]}>{totalProtein}</Text>
+              <Text style={[styles.macroValue, { color: "#60A5FA" }]}>{totalProtein.toFixed(2)}</Text>
               <Text style={styles.macroLabel}>Белки (г)</Text>
             </View>
             <View style={styles.macroItem}>
-              <Text style={[styles.macroValue, { color: "#FB923C" }]}>{totalFat}</Text>
+              <Text style={[styles.macroValue, { color: "#FB923C" }]}>{totalFat.toFixed(2)}</Text>
               <Text style={styles.macroLabel}>Жиры (г)</Text>
             </View>
             <View style={styles.macroItem}>
-              <Text style={[styles.macroValue, { color: "#34D399" }]}>{totalCarbs}</Text>
+              <Text style={[styles.macroValue, { color: "#34D399" }]}>{totalCarbs.toFixed(2)}</Text>
               <Text style={styles.macroLabel}>Углеводы (г)</Text>
             </View>
           </View>

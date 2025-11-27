@@ -13,7 +13,7 @@ import {
 import { FoodItem } from "../../entities/food";
 import { launchImageLibrary } from "react-native-image-picker";
 import { API_TOKEN, MODEL_ID } from "../../../config.local";
-import { ApiClient, FoodDTO, CreateFoodDTO } from "../../shared/api/g";
+import { ApiClient, FoodDTO, CreateFoodDTO, FoodEntryDTO, CreateFoodEntryDTO } from "../../shared/api/g";
 import { authFetch } from "../../shared/api/authFetch";
 import { BASE_URL } from "../../../config.local.js";
 
@@ -75,7 +75,7 @@ function calculateNutrients(product: FoodDTO, weightInGrams: number) {
 interface AddFoodDialogProps {
   open: boolean;
   onClose: () => void;
-  onAddFoodEntry: (food: Omit<FoodItem, "id">) => void;
+  onAddFoodEntry: (food: CreateFoodEntryDTO) => void;
   mealTitle: string;
   foods: FoodDTO[];
   setFoods : React.Dispatch<React.SetStateAction<FoodDTO[]>>;
@@ -115,14 +115,11 @@ export function AddFoodDialog({ open, onClose, onAddFoodEntry, mealTitle, foods,
     const weightNum = parseInt(weight);
     const nutrients = calculateNutrients(selectedProduct, weightNum);
 
-    onAddFoodEntry({
-      name: selectedProduct.name!,
-      weight: weightNum,
-      calories: nutrients.calories,
-      protein: nutrients.protein,
-      fat: nutrients.fat,
-      carbs: nutrients.carbs,
-    });
+    const dto = new CreateFoodEntryDTO();
+    dto.weight = weightNum;
+    dto.foodId = selectedProduct.id;
+
+    onAddFoodEntry(dto);
 
     handleClose();
   };

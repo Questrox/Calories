@@ -1,3 +1,5 @@
+import { FoodEntryDTO } from "../../shared/api/g";
+
 export interface FoodProduct {
   id: string;
   name: string;
@@ -24,7 +26,7 @@ export interface WaterEntry {
 }
 
 export interface MealData {
-  breakfast: FoodItem[];
-  lunch: FoodItem[];
-  dinner: FoodItem[];
+  breakfast: FoodEntryDTO[];
+  lunch: FoodEntryDTO[];
+  dinner: FoodEntryDTO[];
 }

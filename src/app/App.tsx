@@ -8,7 +8,7 @@ import { MealData, WaterEntry } from "../entities/food";
 import { MealPlanDetails } from "../entities/plans";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { authFetch } from "../shared/api/authFetch";
-import { ApiClient, FoodDTO, MealPlanDTO, WaterEntryDTO } from "../shared/api/g";
+import { ApiClient, FoodDTO, MealPlanDTO, WaterEntryDTO, FoodEntryDTO } from "../shared/api/g";
 import { BASE_URL } from "../../config.local.js";
 
 export default function App() {
@@ -55,6 +55,22 @@ export default function App() {
             const currDate = new Date();
             const waterData = await apiClient.getWaterEntries(currDate);
             setWaterEntries(waterData);
+
+            const foodEntriesData = await apiClient.getFoodEntries(currDate);
+            const sortedMeals: MealData = {
+              breakfast: [],
+              lunch: [],
+              dinner: [],
+            };
+
+            for (const entry of foodEntriesData) {
+              const type = entry.mealType?.name;
+
+              if (type === "breakfast") sortedMeals.breakfast.push(entry);
+              else if (type === "lunch") sortedMeals.lunch.push(entry);
+              else if (type === "dinner") sortedMeals.dinner.push(entry);
+            }
+            setMeals(sortedMeals);
           } catch {
             setIsAuthenticated(false);
             await AsyncStorage.removeItem("jwt");

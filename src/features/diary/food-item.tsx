@@ -2,27 +2,28 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Trash2 } from "lucide-react-native";
 import { FoodItem } from "../../entities/food";
+import { FoodEntryDTO } from "../../shared/api/g";
 
 interface FoodItemProps {
-  item: FoodItem;
-  onDelete: (id: string) => void;
+  item: FoodEntryDTO;
+  onDelete: (id: number) => void;
 }
 
 export function FoodItemComponent({ item, onDelete }: FoodItemProps) {
   return (
     <View style={styles.container}>
       <View style={styles.info}>
-        <Text style={styles.name}>{item.name}</Text>
+        <Text style={styles.name}>{item.food!.name!}</Text>
         <Text style={styles.details}>
-          {item.weight}г • {item.calories} ккал
+          {item.weight}г • {item.food!.calories!} ккал
         </Text>
         <View style={styles.macroRow}>
-          <Text style={styles.macro}>Б: {item.protein}г</Text>
-          <Text style={styles.macro}>Ж: {item.fat}г</Text>
-          <Text style={styles.macro}>У: {item.carbs}г</Text>
+          <Text style={styles.macro}>Б: {item.food!.protein!}г</Text>
+          <Text style={styles.macro}>Ж: {item.food!.fat!}г</Text>
+          <Text style={styles.macro}>У: {item.food!.carbs!}г</Text>
         </View>
       </View>
-      <TouchableOpacity style={styles.deleteBtn} onPress={() => onDelete(item.id)}>
+      <TouchableOpacity style={styles.deleteBtn} onPress={() => onDelete(item.id!)}>
         <Trash2 size={20} color="#F87171" />
       </TouchableOpacity>
     </View>
