@@ -6,7 +6,7 @@ import { AddFoodDialog } from "../features/diary/add-food-dialog";
 import { AddWaterDialog } from "../features/diary/add-water-dialog";
 import DatePickerSimple from "../shared/ui/date-picker";
 import { FoodItem, MealData, WaterEntry } from "../entities/food";
-import { ApiClient, FoodDTO, CreateFoodEntryDTO } from "../shared/api/g";
+import { ApiClient, FoodDTO, WaterEntryDTO, CreateWaterEntryDTO, CreateFoodEntryDTO } from "../shared/api/g";
 import { authFetch } from "../shared/api/authFetch";
 import { BASE_URL } from "../../config.local.js";
 
@@ -15,8 +15,8 @@ type MealType = "breakfast" | "lunch" | "dinner";
 interface DiaryPageProps {
   meals: MealData;
   setMeals: React.Dispatch<React.SetStateAction<MealData>>;
-  waterEntries: WaterEntry[];
-  setWaterEntries: React.Dispatch<React.SetStateAction<WaterEntry[]>>;
+  waterEntries: WaterEntryDTO[];
+  setWaterEntries: React.Dispatch<React.SetStateAction<WaterEntryDTO[]>>;
   foods: FoodDTO[];
   setFoods : React.Dispatch<React.SetStateAction<FoodDTO[]>>;
 }
@@ -32,7 +32,7 @@ export function DiaryPage({ meals, setMeals, waterEntries, setWaterEntries, food
   const totalProtein = allFoods.reduce((sum, item) => sum + item.protein, 0);
   const totalFat = allFoods.reduce((sum, item) => sum + item.fat, 0);
   const totalCarbs = allFoods.reduce((sum, item) => sum + item.carbs, 0);
-  const totalWater = waterEntries.reduce((sum, entry) => sum + entry.amount, 0);
+  const totalWater = waterEntries.reduce((sum, entry) => sum + entry.amount!, 0);
 
   const apiClient = new ApiClient(BASE_URL, { fetch: authFetch });
 
@@ -59,12 +59,22 @@ export function DiaryPage({ meals, setMeals, waterEntries, setWaterEntries, food
     setMeals(prev => ({ ...prev, [mealType]: prev[mealType].filter(item => item.id !== foodId) }));
   };
 
-  const handleAddWaterEntry = (amount: number) => {
-    setWaterEntries(prev => [...prev, { id: Date.now().toString(), amount }]);
+  const handleAddWaterEntry = async (amount: number) => {
+    try {
+        const createEntry = new CreateWaterEntryDTO({
+            amount: amount,
+            date: selectedDate,
+            })
+        const newEntry = await apiClient.addWaterEntry(createEntry);
+        setWaterEntries(prev => [...prev, newEntry]);
+    } catch (error) { console.error(error, error.status); }
   };
 
-  const handleDeleteWaterEntry = (id: string) => {
-    setWaterEntries(prev => prev.filter(entry => entry.id !== id));
+  const handleDeleteWaterEntry = async (id: number) => {
+    try {
+        await apiClient.deleteWaterEntry(id);
+        setWaterEntries(prev => prev.filter(entry => entry.id !== id));
+    } catch (error) { console.log(error); }
   };
 
   return (

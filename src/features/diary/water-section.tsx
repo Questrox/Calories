@@ -2,15 +2,16 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, FlatList } from "react-native";
 import { Plus, X } from "lucide-react-native";
 import { WaterEntry } from "../../entities/food";
+import { WaterEntryDTO } from "../../shared/api/g";
 
 interface WaterSectionProps {
-  entries: WaterEntry[];
+  entries: WaterEntryDTO[];
   onAddWater: () => void;
-  onDeleteWater: (id: string) => void;
+  onDeleteWater: (id: number) => void;
 }
 
 export function WaterSection({ entries, onAddWater, onDeleteWater }: WaterSectionProps) {
-  const totalWater = entries.reduce((sum, entry) => sum + entry.amount, 0);
+  const totalWater = entries.reduce((sum, entry) => sum + entry.amount!, 0);
 
   const formatAmount = (amount: number) =>
     amount >= 1000 ? `${(amount / 1000).toFixed(2)} л` : `${amount} мл`;
@@ -37,11 +38,11 @@ export function WaterSection({ entries, onAddWater, onDeleteWater }: WaterSectio
       {entries.length > 0 && (
         <FlatList
           data={entries}
-          keyExtractor={(entry) => entry.id}
+          keyExtractor={(entry) => entry.id!.toString()}
           renderItem={({ item }) => (
             <View style={styles.entry}>
-              <Text style={styles.entryText}>{formatAmount(item.amount)}</Text>
-              <TouchableOpacity style={styles.deleteButton} onPress={() => onDeleteWater(item.id)}>
+              <Text style={styles.entryText}>{formatAmount(item.amount!)}</Text>
+              <TouchableOpacity style={styles.deleteButton} onPress={() => onDeleteWater(item.id!)}>
                 <X color="#9CA3AF" size={16} />
               </TouchableOpacity>
             </View>
