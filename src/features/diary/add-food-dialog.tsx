@@ -14,6 +14,8 @@ import { FoodItem } from "../../entities/food";
 import { launchImageLibrary } from "react-native-image-picker";
 import { API_TOKEN, MODEL_ID } from "../../../config.local";
 import { ApiClient, FoodDTO, CreateFoodDTO } from "../../shared/api/g";
+import { authFetch } from "../../shared/api/authFetch";
+import { BASE_URL } from "../../../config.local.js";
 
 async function handleGetImage() {
   const result = await launchImageLibrary({
@@ -86,11 +88,12 @@ export function AddFoodDialog({ open, onClose, onAddFoodEntry, mealTitle, foods,
   const [weight, setWeight] = useState("");
 
   const [newProductName, setNewProductName] = useState("");
-  const [newProductWeight, setNewProductWeight] = useState("");
   const [newProductCalories, setNewProductCalories] = useState("");
   const [newProductProtein, setNewProductProtein] = useState("");
   const [newProductFat, setNewProductFat] = useState("");
   const [newProductCarbs, setNewProductCarbs] = useState("");
+
+  const apiClient = new ApiClient(BASE_URL, { fetch: authFetch });
 
   function searchFoods(query: string): FoodDTO[] {
     if (!query.trim()) return foods;
@@ -124,20 +127,32 @@ export function AddFoodDialog({ open, onClose, onAddFoodEntry, mealTitle, foods,
     handleClose();
   };
 
-  const handleAddNewProduct = () => {
-    if (!newProductName.trim() || !newProductWeight || !newProductCalories ||
+  const handleAddNewProduct = async () => {
+    if (!newProductName.trim() || !newProductCalories ||
         !newProductProtein || !newProductFat || !newProductCarbs) return;
 
-    onAddFoodEntry({
-      name: newProductName.trim(),
-      weight: parseInt(newProductWeight),
-      calories: parseInt(newProductCalories),
-      protein: parseFloat(newProductProtein),
-      fat: parseFloat(newProductFat),
-      carbs: parseFloat(newProductCarbs),
-    });
+    try {
+        const createProduct = new CreateFoodDTO ({
+            name: newProductName,
+            calories: parseFloat(newProductCalories),
+            protein: parseFloat(newProductProtein),
+            fat: parseFloat(newProductFat),
+            carbs: parseFloat(newProductCarbs),
+            });
 
-    handleClose();
+        const newFood = await apiClient.addFood(createProduct);
+        setFoods([...foods, newFood])
+        setView("search");
+        setSearchQuery("");
+        setSelectedProduct(null);
+        setWeight("");
+        setNewProductName("");
+        setNewProductCalories("");
+        setNewProductProtein("");
+        setNewProductFat("");
+        setNewProductCarbs("");
+    }
+    catch (error) { console.error(error); }
   };
 
   const handleClose = () => {
@@ -146,7 +161,6 @@ export function AddFoodDialog({ open, onClose, onAddFoodEntry, mealTitle, foods,
     setSelectedProduct(null);
     setWeight("");
     setNewProductName("");
-    setNewProductWeight("");
     setNewProductCalories("");
     setNewProductProtein("");
     setNewProductFat("");
@@ -285,16 +299,7 @@ export function AddFoodDialog({ open, onClose, onAddFoodEntry, mealTitle, foods,
                     style={styles.input}
                     placeholderTextColor="#9CA3AF"
                   />
-                  <Text style={styles.label}>Вес (г)</Text>
-                  <TextInput
-                    value={newProductWeight}
-                    onChangeText={setNewProductWeight}
-                    placeholder="100"
-                    keyboardType="numeric"
-                    style={styles.input}
-                    placeholderTextColor="#9CA3AF"
-                  />
-                  <Text style={styles.label}>Калории</Text>
+                  <Text style={styles.label}>Калории (на 100 г)</Text>
                   <TextInput
                     value={newProductCalories}
                     onChangeText={setNewProductCalories}
@@ -303,7 +308,7 @@ export function AddFoodDialog({ open, onClose, onAddFoodEntry, mealTitle, foods,
                     style={styles.input}
                     placeholderTextColor="#9CA3AF"
                   />
-                  <Text style={styles.label}>Белки (г)</Text>
+                  <Text style={styles.label}>Белки (на 100 г)</Text>
                   <TextInput
                     value={newProductProtein}
                     onChangeText={setNewProductProtein}
@@ -312,7 +317,7 @@ export function AddFoodDialog({ open, onClose, onAddFoodEntry, mealTitle, foods,
                     style={styles.input}
                     placeholderTextColor="#9CA3AF"
                   />
-                  <Text style={styles.label}>Жиры (г)</Text>
+                  <Text style={styles.label}>Жиры (на 100 г)</Text>
                   <TextInput
                     value={newProductFat}
                     onChangeText={setNewProductFat}
@@ -321,7 +326,7 @@ export function AddFoodDialog({ open, onClose, onAddFoodEntry, mealTitle, foods,
                     style={styles.input}
                     placeholderTextColor="#9CA3AF"
                   />
-                  <Text style={styles.label}>Углеводы (г)</Text>
+                  <Text style={styles.label}>Углеводы (на 100 г)</Text>
                   <TextInput
                     value={newProductCarbs}
                     onChangeText={setNewProductCarbs}
@@ -333,13 +338,13 @@ export function AddFoodDialog({ open, onClose, onAddFoodEntry, mealTitle, foods,
 
                   <View style={styles.row}>
                     <TouchableOpacity
-                      style={styles.cancelBtn}
+                      style={[styles.cancelBtn, { flex: 1 }]}
                       onPress={() => setView("search")}
                     >
                       <Text style={styles.cancelBtnText}>Отмена</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      style={styles.addBtn}
+                      style={[styles.addBtn, { flex: 1 }]}
                       onPress={handleAddNewProduct}
                     >
                       <Text style={styles.addBtnText}>Добавить</Text>
@@ -381,6 +386,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
     marginBottom: 6,
+    width: 300,
   },
   addNewBtn: {
     backgroundColor: "#374151",
@@ -410,7 +416,7 @@ const styles = StyleSheet.create({
   addBtnText: { color: "white", fontWeight: "bold" },
   addNewBox: { marginTop: 8 },
   label: { color: "white", fontWeight: "500", marginBottom: 4 },
-  row: { flexDirection: "row", justifyContent: "space-between", marginTop: 8 },
-  cancelBtn: { flex: 1, backgroundColor: "#374151", padding: 12, borderRadius: 8, alignItems: "center", marginRight: 4 },
+  row: { flexDirection: "row", justifyContent: "space-between", marginTop: 8, gap: 8 },
+  cancelBtn: { backgroundColor: "#374151", padding: 12, borderRadius: 8, alignItems: "center", marginVertical: 4 },
   cancelBtnText: { color: "white", fontWeight: "bold" },
 });
