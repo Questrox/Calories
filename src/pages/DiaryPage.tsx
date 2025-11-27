@@ -36,6 +36,30 @@ export function DiaryPage({ meals, setMeals, waterEntries, setWaterEntries, food
 
   const apiClient = new ApiClient(BASE_URL, { fetch: authFetch });
 
+  const handleDateChange = async (newDate: Date) => {
+    try {
+        setSelectedDate(newDate);
+        const foodEntriesData = await apiClient.getFoodEntries(newDate);
+        const sortedMeals: MealData = {
+          breakfast: [],
+          lunch: [],
+          dinner: [],
+        };
+
+        for (const entry of foodEntriesData) {
+          const type = entry.mealType?.name;
+
+          if (type === "breakfast") sortedMeals.breakfast.push(entry);
+          else if (type === "lunch") sortedMeals.lunch.push(entry);
+          else if (type === "dinner") sortedMeals.dinner.push(entry);
+        }
+        setMeals(sortedMeals);
+
+        const waterData = await apiClient.getWaterEntries(newDate);
+        setWaterEntries(waterData);
+    } catch (error) { console.error(error); }
+  }
+
   const getMealTitle = (meal: MealType) => {
     switch (meal) {
       case "breakfast": return "Завтрак";
@@ -100,7 +124,7 @@ export function DiaryPage({ meals, setMeals, waterEntries, setWaterEntries, food
       <Text style={styles.title}>Дневник питания</Text>
       <Text style={styles.subtitle}>Отслеживайте свое питание каждый день</Text>
 
-      <DatePickerSimple date={selectedDate} onChange={setSelectedDate} />
+      <DatePickerSimple date={selectedDate} onChange={handleDateChange} />
 
       <View style={styles.summaryBox}>
         <Text style={styles.summaryTitle}>Употреблено за день</Text>
