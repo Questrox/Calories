@@ -28,10 +28,10 @@ export function DiaryPage({ meals, setMeals, waterEntries, setWaterEntries, food
   const [currentMeal, setCurrentMeal] = useState<MealType | null>(null);
 
   const allFoods = Object.values(meals).flat();
-  const totalCalories = allFoods.reduce((sum, item) => sum + item.food.calories, 0);
-  const totalProtein = allFoods.reduce((sum, item) => sum + item.food.protein, 0);
-  const totalFat = allFoods.reduce((sum, item) => sum + item.food.fat, 0);
-  const totalCarbs = allFoods.reduce((sum, item) => sum + item.food.carbs, 0);
+  const totalCalories = allFoods.reduce((sum, item) => sum + item.food.calories * item.weight / 100, 0);
+  const totalProtein = allFoods.reduce((sum, item) => sum + item.food.protein * item.weight / 100, 0);
+  const totalFat = allFoods.reduce((sum, item) => sum + item.food.fat * item.weight / 100, 0);
+  const totalCarbs = allFoods.reduce((sum, item) => sum + item.food.carbs * item.weight / 100, 0);
   const totalWater = waterEntries.reduce((sum, entry) => sum + entry.amount!, 0);
 
   const apiClient = new ApiClient(BASE_URL, { fetch: authFetch });
