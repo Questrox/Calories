@@ -9,9 +9,10 @@ import { MealPlanDTO, MealPlanDayDTO } from "../../shared/api/g";
 interface ProfileProps {
   activeDiet: MealPlanDTO | null;
   onViewDiet: (diet: MealPlanDTO) => void;
+  onLogout: () => void;
 }
 
-export function Profile({ activeDiet, onViewDiet }: ProfileProps) {
+export function Profile({ activeDiet, onViewDiet, onLogout }: ProfileProps) {
   const today = new Date().getDay();
   const dayOfWeek = today === 0 ? 7 : today;
   const todayMenu = activeDiet?.mealPlanDay!.find((menu) => menu.day === dayOfWeek);
@@ -106,6 +107,11 @@ export function Profile({ activeDiet, onViewDiet }: ProfileProps) {
           </View>
         </View>
       )}
+  <View style={styles.logoutContainer}>
+      <TouchableOpacity style={styles.logoutButton}>
+        <Text style={styles.logoutText} onPress={onLogout}>Выйти</Text>
+      </TouchableOpacity>
+    </View>
     </ScrollView>
   );
 }
@@ -217,4 +223,22 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: "center",
   },
+  logoutContainer: {
+    marginTop: 24,
+    alignItems: "center",
+  },
+  logoutButton: {
+    backgroundColor: "#2563EB",
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    width: '100%',
+    alignItems: 'center',
+  },
+  logoutText: {
+    color: "#FFFFFF",
+    fontWeight: "600",
+    fontSize: 16,
+  },
+
 });
