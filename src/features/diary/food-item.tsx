@@ -18,9 +18,15 @@ export function FoodItemComponent({ item, onDelete }: FoodItemProps) {
           {item.weight}г • {item.food!.calories!} ккал
         </Text>
         <View style={styles.macroRow}>
-          <Text style={styles.macro}>Б: {item.food!.protein!}г</Text>
-          <Text style={styles.macro}>Ж: {item.food!.fat!}г</Text>
-          <Text style={styles.macro}>У: {item.food!.carbs!}г</Text>
+<<<<<<< HEAD
+          <Text style={styles.macro}>Б: {(item.food!.protein! * item.weight! / 100).toFixed(2)}г</Text>
+          <Text style={styles.macro}>Ж: {(item.food!.fat! * item.weight! / 100).toFixed(2)}г</Text>
+          <Text style={styles.macro}>У: {(item.food!.carbs! * item.weight! / 100).toFixed(2)}г</Text>
+=======
+          <Text style={styles.macro}>Б: {(item.food!.protein! * item.weight / 100).toFixed(2)}г</Text>
+          <Text style={styles.macro}>Ж: {(item.food!.fat! * item.weight / 100).toFixed(2)}г</Text>
+          <Text style={styles.macro}>У: {(item.food!.carbs! * item.weight / 100).toFixed(2)}г</Text>
+>>>>>>> 17e4651 (Распознавание еды по фото, исправления в расчете калорий, исправил ошибку с VirtualizedLists)
         </View>
       </View>
       <TouchableOpacity style={styles.deleteBtn} onPress={() => onDelete(item.id!)}>

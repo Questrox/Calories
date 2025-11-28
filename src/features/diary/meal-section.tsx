@@ -14,10 +14,17 @@ interface MealSectionProps {
 }
 
 export default function MealSection({ title, items, onAdd, onDelete, showCalories = true }: MealSectionProps) {
-  const totalCalories = items.reduce((sum, item) => sum + item.food!.calories!, 0);
-  const totalProtein = items.reduce((sum, item) => sum + item.food!.protein!, 0);
-  const totalFat = items.reduce((sum, item) => sum + item.food!.fat!, 0);
-  const totalCarbs = items.reduce((sum, item) => sum + item.food!.carbs!, 0);
+<<<<<<< HEAD
+  const totalCalories = items.reduce((sum, item) => sum + item.food!.calories! * item.weight! / 100, 0);
+  const totalProtein = items.reduce((sum, item) => sum + item.food!.protein! * item.weight! / 100, 0);
+  const totalFat = items.reduce((sum, item) => sum + item.food!.fat! * item.weight! / 100, 0);
+  const totalCarbs = items.reduce((sum, item) => sum + item.food!.carbs! * item.weight! / 100, 0);
+=======
+  const totalCalories = items.reduce((sum, item) => sum + item.food!.calories! * item.weight / 100, 0);
+  const totalProtein = items.reduce((sum, item) => sum + item.food!.protein! * item.weight / 100, 0);
+  const totalFat = items.reduce((sum, item) => sum + item.food!.fat! * item.weight / 100, 0);
+  const totalCarbs = items.reduce((sum, item) => sum + item.food!.carbs! * item.weight / 100, 0);
+>>>>>>> 17e4651 (Распознавание еды по фото, исправления в расчете калорий, исправил ошибку с VirtualizedLists)
 
   return (
     <View style={styles.card}>
@@ -33,23 +40,26 @@ export default function MealSection({ title, items, onAdd, onDelete, showCalorie
       {/* Calories summary */}
       {showCalories && totalCalories > 0 && (
         <View style={styles.caloriesBox}>
-          <Text style={styles.caloriesText}>{totalCalories} ккал</Text>
+          <Text style={styles.caloriesText}>{totalCalories.toFixed(2)} ккал</Text>
           <View style={styles.macroRow}>
-            <Text style={[styles.macroText, { marginRight: 16 }]}>Б: {totalProtein}г</Text>
-            <Text style={[styles.macroText, { marginRight: 16 }]}>Ж: {totalFat}г</Text>
-            <Text style={styles.macroText}>У: {totalCarbs}г</Text>
+            <Text style={[styles.macroText, { marginRight: 16 }]}>Б: {totalProtein.toFixed(2)}г</Text>
+            <Text style={[styles.macroText, { marginRight: 16 }]}>Ж: {totalFat.toFixed(2)}г</Text>
+            <Text style={styles.macroText}>У: {totalCarbs.toFixed(2)}г</Text>
           </View>
         </View>
       )}
 
       {/* Food items */}
       {items.length > 0 && (
-        <FlatList
-          data={items}
-          keyExtractor={item => item.id!.toString()}
-          renderItem={({ item }) => <FoodItemComponent item={item} onDelete={onDelete} />}
-          contentContainerStyle={styles.itemsContainer}
-        />
+        <View style={styles.itemsContainer}>
+          {items.map((item) => (
+            <FoodItemComponent
+              key={item.id!.toString()}
+              item={item}
+              onDelete={onDelete}
+            />
+          ))}
+        </View>
       )}
     </View>
   );

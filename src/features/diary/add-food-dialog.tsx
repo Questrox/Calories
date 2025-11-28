@@ -9,58 +9,12 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator
 } from "react-native";
 import { FoodItem } from "../../entities/food";
 import { launchImageLibrary } from "react-native-image-picker";
-import { API_TOKEN, MODEL_ID } from "../../../config.local";
-import { ApiClient, FoodDTO, CreateFoodDTO, FoodEntryDTO, CreateFoodEntryDTO } from "../../shared/api/g";
-import { authFetch } from "../../shared/api/authFetch";
-import { BASE_URL } from "../../../config.local.js";
-
-async function handleGetImage() {
-  const result = await launchImageLibrary({
-    mediaType: "photo",
-    includeBase64: true,
-  });
-
-  if (result.assets && result.assets.length > 0) {
-    const imageBase64 = result.assets[0].base64;
-    if (imageBase64) {
-      recognizeFood(imageBase64);
-    }
-  }
-}
-
-
-async function recognizeFood(imageBase64: string) {
-  try {
-    console.log("Отправляю запрос к Hugging Face...");
-
-    const response = await fetch(`https://router.huggingface.co/hf-inference/models/${MODEL_ID}`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${API_TOKEN}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        inputs: `data:image/jpeg;base64,${imageBase64}`,
-        options: { wait_for_model: true }
-      }),
-    });
-
-    console.log("Фото отправлено, HTTP статус:", response.status);
-    const text = await response.text();
-    console.log("Ответ Hugging Face (raw):", text);
-
-    if (!response.ok) throw new Error(`Inference request failed: ${response.statusText}`);
-
-    const result = JSON.parse(text);
-    console.log("Распознанное блюдо:", result);
-    return result;
-  } catch (err) {
-    console.error("Ошибка:", err);
-  }
-}
+import { ApiClient, FoodDTO, CreateFoodDTO, FoodEntryDTO, CreateFoodEntryDTO, authFetch, recognizeFood } from "../../shared/api";
+import { BASE_URL } from "../../../config.local";
 
 function calculateNutrients(product: FoodDTO, weightInGrams: number) {
   const factor = weightInGrams / 100;
@@ -86,6 +40,8 @@ export function AddFoodDialog({ open, onClose, onAddFoodEntry, mealTitle, foods,
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<FoodDTO | null>(null);
   const [weight, setWeight] = useState("");
+  const [loading, setLoading] = useState<boolean>(false);
+
 
   const [newProductName, setNewProductName] = useState("");
   const [newProductCalories, setNewProductCalories] = useState("");
@@ -103,6 +59,41 @@ export function AddFoodDialog({ open, onClose, onAddFoodEntry, mealTitle, foods,
   }
 
   const filteredFoods = useMemo(() => searchFoods(searchQuery), [searchQuery]);
+
+  const handleRecognizeFromPhoto = async () => {
+    const result = await launchImageLibrary({
+      mediaType: "photo",
+      includeBase64: true,
+    });
+
+    if (!result.assets?.length) return;
+
+    const imageBase64 = result.assets[0].base64;
+    if (!imageBase64) return;
+
+    try {
+      setLoading(true);
+
+      const recognition = await recognizeFood(imageBase64);
+      if (!recognition || !recognition.length) return;
+
+      const label = recognition[0].label;
+      if (!label) return;
+
+      const matchedProduct = foods.find(
+        (f) => f.engName?.toLowerCase() === label.toLowerCase()
+      );
+
+      if (matchedProduct) {
+        handleProductSelect(matchedProduct);
+      }
+
+    } catch (error) { console.error(error); }
+    finally {
+      setLoading(false);
+    }
+  };
+
 
   const handleProductSelect = (product: FoodDTO) => {
     setSelectedProduct(product);
@@ -225,7 +216,7 @@ export function AddFoodDialog({ open, onClose, onAddFoodEntry, mealTitle, foods,
                   <TouchableOpacity
                     style={[styles.addNewBtn, { backgroundColor: "#2563EB" }]}
                     onPress={() => {
-                      handleGetImage();
+                      handleRecognizeFromPhoto();
                     }}
                   >
                     <Text style={styles.addNewBtnText}>Определить продукт по фото</Text>
@@ -353,6 +344,12 @@ export function AddFoodDialog({ open, onClose, onAddFoodEntry, mealTitle, foods,
           </View>
         </TouchableOpacity>
       </KeyboardAvoidingView>
+      {loading && (
+          <View style={styles.loadingOverlay}>
+            <ActivityIndicator size="large" color="#FFFFFF" />
+            <Text style={{ color: "#FFFFFF", marginTop: 8 }}>Распознаём фото...</Text>
+          </View>
+        )}
     </Modal>
   );
 }
@@ -416,4 +413,15 @@ const styles = StyleSheet.create({
   row: { flexDirection: "row", justifyContent: "space-between", marginTop: 8, gap: 8 },
   cancelBtn: { backgroundColor: "#374151", padding: 12, borderRadius: 8, alignItems: "center", marginVertical: 4 },
   cancelBtnText: { color: "white", fontWeight: "bold" },
+  loadingOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 999,
+  },
 });

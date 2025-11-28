@@ -36,19 +36,16 @@ export function WaterSection({ entries, onAddWater, onDeleteWater }: WaterSectio
 
       {/* Entries */}
       {entries.length > 0 && (
-        <FlatList
-          data={entries}
-          keyExtractor={(entry) => entry.id!.toString()}
-          renderItem={({ item }) => (
-            <View style={styles.entry}>
+        <View style={styles.itemsContainer}>
+          {entries.map((item) => (
+            <View key={item.id} style={styles.entry}>
               <Text style={styles.entryText}>{formatAmount(item.amount!)}</Text>
               <TouchableOpacity style={styles.deleteButton} onPress={() => onDeleteWater(item.id!)}>
                 <X color="#9CA3AF" size={16} />
               </TouchableOpacity>
             </View>
-          )}
-          contentContainerStyle={styles.itemsContainer}
-        />
+          ))}
+        </View>
       )}
     </View>
   );
