@@ -7,8 +7,7 @@ import { ProfilePage } from "../pages/ProfilePage";
 import { MealData, WaterEntry } from "../entities/food";
 import { MealPlanDetails } from "../entities/plans";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { authFetch } from "../shared/api/authFetch";
-import { ApiClient, FoodDTO, MealPlanDTO, WaterEntryDTO, FoodEntryDTO } from "../shared/api/g";
+import { ApiClient, FoodDTO, MealPlanDTO, WaterEntryDTO, FoodEntryDTO, authFetch } from "../shared/api";
 import { BASE_URL } from "../../config.local.js";
 
 export default function App() {
@@ -28,63 +27,66 @@ export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const apiClient = new ApiClient(BASE_URL, { fetch: authFetch });
 
+
+  async function initialize() {
+    try {
+      setLoading(true);
+      const token = await AsyncStorage.getItem("jwt");
+      if (!token) {
+        setIsAuthenticated(false);
+        return;
+      }
+
+      // проверяем валидность токена через ApiClient
+      await apiClient.validate();
+      setIsAuthenticated(true);
+
+      // загружаем данные
+      const foodData = await apiClient.getFoods();
+      setFoods(foodData);
+
+      const plansData = await apiClient.getMealPlans();
+      setPlans(plansData);
+
+      const dietData = await apiClient.getCurrentMealPlan();
+      setActiveDiet(dietData);
+
+      const currDate = new Date();
+      const waterData = await apiClient.getWaterEntries(currDate);
+      setWaterEntries(waterData);
+
+      const foodEntriesData = await apiClient.getFoodEntries(currDate);
+      const sortedMeals: MealData = {
+        breakfast: [],
+        lunch: [],
+        dinner: [],
+      };
+
+      for (const entry of foodEntriesData) {
+        const type = entry.mealType?.name;
+
+        if (type === "breakfast") sortedMeals.breakfast.push(entry);
+        else if (type === "lunch") sortedMeals.lunch.push(entry);
+        else if (type === "dinner") sortedMeals.dinner.push(entry);
+      }
+      setMeals(sortedMeals);
+    } catch {
+      setIsAuthenticated(false);
+      await AsyncStorage.removeItem("jwt");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   // проверка токена при старте приложения
     useEffect(() => {
-        async function initialize() {
-          try {
-            const token = await AsyncStorage.getItem("jwt");
-            if (!token) {
-              setIsAuthenticated(false);
-              return;
-            }
-
-            // проверяем валидность токена через ApiClient
-            await apiClient.validate();
-            setIsAuthenticated(true);
-
-            // загружаем данные
-            const foodData = await apiClient.getFoods();
-            setFoods(foodData);
-
-            const plansData = await apiClient.getMealPlans();
-            setPlans(plansData);
-
-            const dietData = await apiClient.getCurrentMealPlan();
-            setActiveDiet(dietData);
-
-            const currDate = new Date();
-            const waterData = await apiClient.getWaterEntries(currDate);
-            setWaterEntries(waterData);
-
-            const foodEntriesData = await apiClient.getFoodEntries(currDate);
-            const sortedMeals: MealData = {
-              breakfast: [],
-              lunch: [],
-              dinner: [],
-            };
-
-            for (const entry of foodEntriesData) {
-              const type = entry.mealType?.name;
-
-              if (type === "breakfast") sortedMeals.breakfast.push(entry);
-              else if (type === "lunch") sortedMeals.lunch.push(entry);
-              else if (type === "dinner") sortedMeals.dinner.push(entry);
-            }
-            setMeals(sortedMeals);
-          } catch {
-            setIsAuthenticated(false);
-            await AsyncStorage.removeItem("jwt");
-          } finally {
-            setLoading(false);
-          }
-        }
-
         initialize();
       }, []);
 
     if (loading) {
       return (
-        <SafeAreaView style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <SafeAreaView style={{ flex: 1, justifyContent: "center",
+            alignItems: "center", backgroundColor: "black" }}>
           <ActivityIndicator size="large" color="#fff" />
         </SafeAreaView>
       );
@@ -94,7 +96,7 @@ export default function App() {
         return (
           <LoginPage
             apiClient={apiClient}
-            onLoginSuccess={() => setIsAuthenticated(true)}
+            onLoginSuccess={initialize}
           />
         );
     }
@@ -102,6 +104,15 @@ export default function App() {
   function handleViewDiet(diet: MealPlanDTO) {
     setSelectedPlan(diet);
     setActiveTab("plans");
+  }
+
+  async function handleLogout() {
+      try {
+          setIsAuthenticated(false);
+          await AsyncStorage.removeItem("jwt");
+          await apiClient.logout();
+          setActiveTab("diary");
+      } catch (error) { console.error(); }
   }
 
   return (
@@ -132,6 +143,7 @@ export default function App() {
           <ProfilePage
             activeDiet={activeDiet}
             onViewDiet={handleViewDiet}
+            onLogout={handleLogout}
           />
         )}
       </View>
