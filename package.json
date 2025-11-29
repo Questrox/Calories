@@ -12,6 +12,7 @@
     "nswag": "^14.6.2",
     "react": "19.1.1",
     "react-native": "0.82.0",
+    "react-native-calendars": "^1.1313.0",
     "react-native-image-picker": "^8.2.1",
     "react-native-safe-area-context": "^5.5.2",
     "react-native-svg": "^15.14.0"
